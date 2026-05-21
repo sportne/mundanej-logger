@@ -3,6 +3,7 @@ tasks.register('validateDesignControlPack') {
     description = 'Validates that project governance documentation exists.'
     inputs.files(
         rootProject.file('docs/charter.md'),
+        rootProject.file('docs/configuration.md'),
         rootProject.file('docs/architecture/module-boundaries.md'),
         rootProject.file('docs/verification/architecture-gates.md'),
         rootProject.file('docs/verification/native-image.md'),

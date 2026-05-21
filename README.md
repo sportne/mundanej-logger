@@ -28,3 +28,6 @@ LOG.info()
 - `mundane-logger-slf4j`
 - `mundane-logger-testkit`
 - `mundane-logger-bom`
+
+Configuration details are documented in
+[`docs/configuration.md`](docs/configuration.md).

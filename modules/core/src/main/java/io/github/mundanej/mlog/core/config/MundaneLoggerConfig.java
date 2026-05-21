@@ -48,16 +48,23 @@ public final class MundaneLoggerConfig {
   }
 
   public static MundaneLoggerConfig loadDefault() {
+    return load(System.getProperties(), System.getenv());
+  }
+
+  public static MundaneLoggerConfig load(
+      Properties systemProperties, Map<String, String> environment) {
+    Objects.requireNonNull(systemProperties, "systemProperties");
+    Objects.requireNonNull(environment, "environment");
     Builder builder = builder();
     String configuredFile =
         firstNonBlank(
-            System.getProperty("mundane.logger.configFile"),
-            System.getenv("MUNDANE_LOGGER_CONFIG_FILE"));
+            systemProperties.getProperty("mundane.logger.configFile"),
+            environment.get("MUNDANE_LOGGER_CONFIG_FILE"));
     if (configuredFile != null) {
       applyPropertiesFile(builder, Path.of(configuredFile));
     }
-    applyEnvironment(builder, System.getenv());
-    applySystemProperties(builder, System.getProperties());
+    applyEnvironment(builder, environment);
+    applySystemProperties(builder, systemProperties);
     return builder.build();
   }
 
@@ -129,27 +136,29 @@ public final class MundaneLoggerConfig {
   private static void applyEnvironment(Builder builder, Map<String, String> environment) {
     String rootLevel = environment.get("MUNDANE_LOGGER_ROOT_LEVEL");
     if (rootLevel != null && !rootLevel.isBlank()) {
-      builder.rootLevel(parseEnum(rootLevel, LogLevel.class));
+      builder.rootLevel(parseEnum("MUNDANE_LOGGER_ROOT_LEVEL", rootLevel, LogLevel.class));
     }
     String format = environment.get("MUNDANE_LOGGER_FORMAT");
     if (format != null && !format.isBlank()) {
-      builder.format(parseEnum(format, OutputFormat.class));
+      builder.format(parseEnum("MUNDANE_LOGGER_FORMAT", format, OutputFormat.class));
     }
     String sink = environment.get("MUNDANE_LOGGER_SINK");
     if (sink != null && !sink.isBlank()) {
-      builder.sinkType(parseEnum(sink, SinkType.class));
+      builder.sinkType(parseEnum("MUNDANE_LOGGER_SINK", sink, SinkType.class));
     }
     String fileMode = environment.get("MUNDANE_LOGGER_FILE_MODE");
     if (fileMode != null && !fileMode.isBlank()) {
-      builder.fileMode(parseEnum(fileMode, FileMode.class));
+      builder.fileMode(parseEnum("MUNDANE_LOGGER_FILE_MODE", fileMode, FileMode.class));
     }
     String throwableMode = environment.get("MUNDANE_LOGGER_THROWABLE");
     if (throwableMode != null && !throwableMode.isBlank()) {
-      builder.throwableMode(parseEnum(throwableMode, ThrowableMode.class));
+      builder.throwableMode(
+          parseEnum("MUNDANE_LOGGER_THROWABLE", throwableMode, ThrowableMode.class));
     }
     String timestampMode = environment.get("MUNDANE_LOGGER_TIMESTAMP");
     if (timestampMode != null && !timestampMode.isBlank()) {
-      builder.timestampMode(parseEnum(timestampMode, TimestampMode.class));
+      builder.timestampMode(
+          parseEnum("MUNDANE_LOGGER_TIMESTAMP", timestampMode, TimestampMode.class));
     }
     String filePath = environment.get("MUNDANE_LOGGER_FILE_PATH");
     if (filePath != null && !filePath.isBlank()) {
@@ -157,34 +166,48 @@ public final class MundaneLoggerConfig {
     }
     String includeThread = environment.get("MUNDANE_LOGGER_INCLUDE_THREAD");
     if (includeThread != null && !includeThread.isBlank()) {
-      builder.includeThread(Boolean.parseBoolean(includeThread));
+      builder.includeThread(parseBoolean("MUNDANE_LOGGER_INCLUDE_THREAD", includeThread));
+    }
+    String loggerPrefix = "MUNDANE_LOGGER_LEVEL_";
+    for (Map.Entry<String, String> entry : environment.entrySet()) {
+      String key = entry.getKey();
+      if (key.equals(loggerPrefix)) {
+        throw new IllegalArgumentException("logger name must not be blank for " + key);
+      }
+      if (key.startsWith(loggerPrefix) && key.length() > loggerPrefix.length()) {
+        String loggerName =
+            key.substring(loggerPrefix.length()).replace('_', '.').toLowerCase(Locale.ROOT);
+        builder.level(loggerName, parseEnum(key, entry.getValue(), LogLevel.class));
+      }
     }
   }
 
   private static void applySystemProperties(Builder builder, Properties properties) {
     String rootLevel = properties.getProperty("mundane.logger.rootLevel");
     if (rootLevel != null && !rootLevel.isBlank()) {
-      builder.rootLevel(parseEnum(rootLevel, LogLevel.class));
+      builder.rootLevel(parseEnum("mundane.logger.rootLevel", rootLevel, LogLevel.class));
     }
     String format = properties.getProperty("mundane.logger.format");
     if (format != null && !format.isBlank()) {
-      builder.format(parseEnum(format, OutputFormat.class));
+      builder.format(parseEnum("mundane.logger.format", format, OutputFormat.class));
     }
     String sink = properties.getProperty("mundane.logger.sink");
     if (sink != null && !sink.isBlank()) {
-      builder.sinkType(parseEnum(sink, SinkType.class));
+      builder.sinkType(parseEnum("mundane.logger.sink", sink, SinkType.class));
     }
     String fileMode = properties.getProperty("mundane.logger.file.mode");
     if (fileMode != null && !fileMode.isBlank()) {
-      builder.fileMode(parseEnum(fileMode, FileMode.class));
+      builder.fileMode(parseEnum("mundane.logger.file.mode", fileMode, FileMode.class));
     }
     String throwableMode = properties.getProperty("mundane.logger.throwable");
     if (throwableMode != null && !throwableMode.isBlank()) {
-      builder.throwableMode(parseEnum(throwableMode, ThrowableMode.class));
+      builder.throwableMode(
+          parseEnum("mundane.logger.throwable", throwableMode, ThrowableMode.class));
     }
     String timestampMode = properties.getProperty("mundane.logger.timestamp");
     if (timestampMode != null && !timestampMode.isBlank()) {
-      builder.timestampMode(parseEnum(timestampMode, TimestampMode.class));
+      builder.timestampMode(
+          parseEnum("mundane.logger.timestamp", timestampMode, TimestampMode.class));
     }
     String filePath = properties.getProperty("mundane.logger.file.path");
     if (filePath != null && !filePath.isBlank()) {
@@ -192,21 +215,76 @@ public final class MundaneLoggerConfig {
     }
     String includeThread = properties.getProperty("mundane.logger.includeThread");
     if (includeThread != null && !includeThread.isBlank()) {
-      builder.includeThread(Boolean.parseBoolean(includeThread));
+      builder.includeThread(parseBoolean("mundane.logger.includeThread", includeThread));
     }
     for (String name : properties.stringPropertyNames()) {
       String prefix = "mundane.logger.level.";
       if (name.startsWith(prefix)) {
-        builder.level(
-            name.substring(prefix.length()),
-            parseEnum(properties.getProperty(name), LogLevel.class));
+        String loggerName = name.substring(prefix.length());
+        if (loggerName.isBlank()) {
+          throw new IllegalArgumentException("logger name must not be blank for " + name);
+        }
+        builder.level(loggerName, parseEnum(name, properties.getProperty(name), LogLevel.class));
       }
     }
   }
 
-  private static <T extends Enum<T>> T parseEnum(String value, Class<T> type) {
-    String normalized = value.trim().replace('-', '_').toUpperCase(Locale.ROOT);
-    return Enum.valueOf(type, normalized);
+  private static <T extends Enum<T>> T parseEnum(String key, String value, Class<T> type) {
+    String normalized = normalizeEnumValue(value);
+    try {
+      return Enum.valueOf(type, normalized);
+    } catch (IllegalArgumentException exception) {
+      throw new IllegalArgumentException(
+          "invalid value for " + key + ": " + value + "; expected one of " + enumValues(type),
+          exception);
+    }
+  }
+
+  private static String normalizeEnumValue(String value) {
+    String trimmed = value.trim();
+    StringBuilder builder = new StringBuilder(trimmed.length() + 4);
+    char previous = 0;
+    for (int index = 0; index < trimmed.length(); index++) {
+      char character = trimmed.charAt(index);
+      if (character == '-') {
+        builder.append('_');
+      } else {
+        if (Character.isUpperCase(character)
+            && index > 0
+            && previous != '_'
+            && previous != '-'
+            && Character.isLowerCase(previous)) {
+          builder.append('_');
+        }
+        builder.append(Character.toUpperCase(character));
+      }
+      previous = character;
+    }
+    return builder.toString();
+  }
+
+  private static boolean parseBoolean(String key, String value) {
+    String normalized = value.trim().toLowerCase(Locale.ROOT);
+    if ("true".equals(normalized)) {
+      return true;
+    }
+    if ("false".equals(normalized)) {
+      return false;
+    }
+    throw new IllegalArgumentException(
+        "invalid value for " + key + ": " + value + "; expected true or false");
+  }
+
+  private static <T extends Enum<T>> String enumValues(Class<T> type) {
+    StringBuilder builder = new StringBuilder();
+    T[] constants = type.getEnumConstants();
+    for (int index = 0; index < constants.length; index++) {
+      if (index > 0) {
+        builder.append(", ");
+      }
+      builder.append(constants[index].name().toLowerCase(Locale.ROOT));
+    }
+    return builder.toString();
   }
 
   private static String firstNonBlank(String first, String second) {
