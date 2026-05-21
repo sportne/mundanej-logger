@@ -31,3 +31,6 @@ LOG.info()
 
 Configuration details are documented in
 [`docs/configuration.md`](docs/configuration.md).
+
+Output format details are documented in
+[`docs/architecture/output-formats.md`](docs/architecture/output-formats.md).
