@@ -1,0 +1,19 @@
+plugins {
+    id 'mlog.java-conventions'
+    id 'mlog.quality-conventions'
+    id 'mlog.coverage-conventions'
+    id 'mlog.native-conventions'
+}
+
+description = 'Native Image smoke tests for mundane logger.'
+
+dependencies {
+    testImplementation project(':modules:api')
+    testImplementation project(':modules:core')
+    testImplementation project(':modules:slf4j')
+    testImplementation project(':modules:testkit')
+    nativeSmokeTestImplementation project(':modules:api')
+    nativeSmokeTestImplementation project(':modules:core')
+    nativeSmokeTestImplementation project(':modules:slf4j')
+    nativeSmokeTestImplementation project(':modules:testkit')
+}

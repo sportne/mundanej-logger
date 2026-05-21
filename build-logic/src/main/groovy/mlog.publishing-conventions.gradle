@@ -1,0 +1,29 @@
+plugins {
+    id 'mlog.identity-conventions'
+    id 'maven-publish'
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            pom {
+                name = project.name
+                description = project.description ?: project.name
+                url = 'https://github.com/mundanej/mundane-logger'
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'https://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            name = 'localStaging'
+            url = rootProject.layout.buildDirectory.dir('staging-repository')
+        }
+    }
+}

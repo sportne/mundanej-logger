@@ -1,0 +1,51 @@
+plugins {
+    id 'org.graalvm.buildtools.native'
+}
+
+def nativeSmokeTestSourceSet = sourceSets.create('nativeSmokeTest') {
+    java.srcDir 'src/nativeSmokeTest/java'
+    resources.srcDir 'src/nativeSmokeTest/resources'
+    compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
+    runtimeClasspath += output + compileClasspath
+}
+
+configurations.named('nativeSmokeTestImplementation') {
+    extendsFrom configurations.testImplementation
+}
+
+configurations.named('nativeSmokeTestRuntimeOnly') {
+    extendsFrom configurations.testRuntimeOnly
+}
+
+def nativeSmokeJvmTest = tasks.register('nativeSmokeJvmTest', Test) {
+    group = 'verification'
+    description = 'Runs the JVM discovery pass for Native Image smoke tests.'
+    testClassesDirs = nativeSmokeTestSourceSet.output.classesDirs
+    classpath = nativeSmokeTestSourceSet.runtimeClasspath
+    shouldRunAfter tasks.named('test')
+}
+
+graalvmNative {
+    toolchainDetection = true
+    metadataRepository {
+        enabled = false
+    }
+    registerTestBinary('smokeTest') {
+        forTestTask(nativeSmokeJvmTest)
+        usingSourceSet(nativeSmokeTestSourceSet)
+    }
+    binaries {
+        test {
+            quickBuild = true
+            useFatJar = true
+            buildArgs.add('--no-fallback')
+            buildArgs.add('-H:+ReportExceptionStackTraces')
+        }
+        smokeTest {
+            quickBuild = true
+            useFatJar = true
+            buildArgs.add('--no-fallback')
+            buildArgs.add('-H:+ReportExceptionStackTraces')
+        }
+    }
+}

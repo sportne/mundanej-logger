@@ -1,0 +1,21 @@
+plugins {
+    id 'mlog.java-conventions'
+    id 'mlog.quality-conventions'
+    id 'mlog.coverage-conventions'
+    id 'mlog.publishing-conventions'
+    id 'mlog.native-conventions'
+}
+
+description = 'Synchronous mundane logger core runtime, configuration, renderers, and sinks.'
+
+dependencies {
+    api project(':modules:api')
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId = 'mundane-logger-core'
+        }
+    }
+}

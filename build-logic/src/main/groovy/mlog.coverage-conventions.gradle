@@ -1,0 +1,32 @@
+import org.gradle.api.artifacts.VersionCatalogsExtension
+
+plugins {
+    id 'jacoco'
+}
+
+def libs = extensions.getByType(VersionCatalogsExtension).named('libs')
+
+jacoco {
+    toolVersion = libs.findVersion('jacoco').get().requiredVersion
+}
+
+tasks.named('test') {
+    finalizedBy tasks.named('jacocoTestReport')
+}
+
+tasks.named('jacocoTestReport') {
+    reports {
+        xml.required = true
+        html.required = true
+    }
+}
+
+tasks.named('jacocoTestCoverageVerification') {
+    violationRules {
+        rule {
+            limit {
+                minimum = 0.40
+            }
+        }
+    }
+}

@@ -1,0 +1,21 @@
+plugins {
+    id 'mlog.java-conventions'
+    id 'mlog.quality-conventions'
+    id 'mlog.coverage-conventions'
+    id 'mlog.publishing-conventions'
+}
+
+description = 'Testing support for mundane logger.'
+
+dependencies {
+    api project(':modules:api')
+    api project(':modules:core')
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId = 'mundane-logger-testkit'
+        }
+    }
+}

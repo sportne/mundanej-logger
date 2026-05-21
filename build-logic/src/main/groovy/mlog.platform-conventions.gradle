@@ -1,0 +1,23 @@
+plugins {
+    id 'mlog.identity-conventions'
+    id 'java-platform'
+    id 'maven-publish'
+}
+
+javaPlatform {
+    allowDependencies()
+}
+
+publishing {
+    publications {
+        mavenBom(MavenPublication) {
+            from components.javaPlatform
+        }
+    }
+    repositories {
+        maven {
+            name = 'localStaging'
+            url = rootProject.layout.buildDirectory.dir('staging-repository')
+        }
+    }
+}

@@ -1,0 +1,24 @@
+plugins {
+    id 'mlog.java-conventions'
+    id 'mlog.quality-conventions'
+    id 'mlog.coverage-conventions'
+    id 'mlog.publishing-conventions'
+    id 'mlog.native-conventions'
+}
+
+description = 'SLF4J 2.x provider backed by mundane logger.'
+
+dependencies {
+    api libs.slf4j.api
+    implementation project(':modules:api')
+    implementation project(':modules:core')
+    testImplementation project(':modules:testkit')
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId = 'mundane-logger-slf4j'
+        }
+    }
+}

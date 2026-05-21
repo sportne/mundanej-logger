@@ -1,0 +1,106 @@
+plugins {
+    id 'base'
+    id 'mlog.docs-validation-conventions'
+    id 'mlog.offline-conventions'
+}
+
+group = 'io.github.mundanej'
+version = providers.gradleProperty('mlog.version').getOrElse('0.1.0-SNAPSHOT')
+
+def checkedProjects = [
+    ':modules:mundane-logger-bom',
+    ':modules:api',
+    ':modules:core',
+    ':modules:slf4j',
+    ':modules:testkit',
+    ':modules:architecture-tests',
+    ':modules:native-tests',
+]
+
+def qualityProjects = checkedProjects.findAll { it != ':modules:mundane-logger-bom' }
+def publishedProjects = [
+    ':modules:mundane-logger-bom',
+    ':modules:api',
+    ':modules:core',
+    ':modules:slf4j',
+    ':modules:testkit',
+]
+
+tasks.register('checkAll') {
+    group = 'verification'
+    description = 'Runs check tasks across all included mundane logger projects.'
+    dependsOn checkedProjects.collect { "${it}:check" }
+}
+
+tasks.register('qualityGate') {
+    group = 'verification'
+    description = 'Runs the default local quality gate.'
+    dependsOn 'validateDesignControlPack', 'checkAll'
+    dependsOn qualityProjects.collect { "${it}:spotlessCheck" }
+    dependsOn qualityProjects.collect { "${it}:jacocoTestCoverageVerification" }
+}
+
+tasks.named('check') {
+    dependsOn tasks.named('qualityGate')
+}
+
+tasks.register('nativeSmoke') {
+    group = 'verification'
+    description = 'Runs the representative GraalVM Native Image smoke lane.'
+    dependsOn ':modules:native-tests:nativeSmokeTest'
+}
+
+def publicationStagingDirectory = layout.buildDirectory.dir('staging-repository')
+def publicationCandidateVersion = version.toString()
+
+tasks.register('stagePublications') {
+    group = 'publishing'
+    description = 'Publishes approved artifacts to the local staging repository.'
+    dependsOn publishedProjects.collect { "${it}:publishAllPublicationsToLocalStagingRepository" }
+}
+
+tasks.register('validatePublicationStaging') {
+    group = 'verification'
+    description = 'Validates the local publication staging repository layout.'
+    dependsOn tasks.named('stagePublications')
+    inputs.dir(publicationStagingDirectory)
+    doLast {
+        def repository = publicationStagingDirectory.get().asFile
+        if (!repository.isDirectory()) {
+            throw new GradleException("Missing publication staging repository: ${repository}")
+        }
+        def expectedArtifacts = [
+            'mundane-logger-bom',
+            'mundane-logger-api',
+            'mundane-logger-core',
+            'mundane-logger-slf4j',
+            'mundane-logger-testkit',
+        ]
+        expectedArtifacts.each { artifact ->
+            def artifactDirectory = new File(repository, "io/github/mundanej/${artifact}/${publicationCandidateVersion}")
+            if (!artifactDirectory.isDirectory()) {
+                throw new GradleException("Missing staged coordinate directory: ${artifactDirectory}")
+            }
+        }
+    }
+}
+
+tasks.register('publicationDryRun') {
+    group = 'publishing'
+    description = 'Stages approved Maven artifacts locally and validates release metadata without publishing remotely.'
+    dependsOn tasks.named('validatePublicationStaging')
+}
+
+tasks.register('printPublishedArtifacts') {
+    group = 'help'
+    description = 'Prints planned artifact coordinates.'
+    doLast {
+        println '''
+:modules:mundane-logger-bom -> io.github.mundanej:mundane-logger-bom
+:modules:api                -> io.github.mundanej:mundane-logger-api
+:modules:core               -> io.github.mundanej:mundane-logger-core
+:modules:slf4j              -> io.github.mundanej:mundane-logger-slf4j
+:modules:testkit            -> io.github.mundanej:mundane-logger-testkit
+'''.stripIndent()
+    }
+}

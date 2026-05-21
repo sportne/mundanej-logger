@@ -1,0 +1,32 @@
+# Gradle caches and build output
+.gradle/
+build/
+
+# IDE/editor state
+.idea/
+.vscode/
+*.iml
+
+# JVM/tool output
+out/
+target/
+*.class
+*.log
+hs_err_pid*
+replay_pid*
+
+# Local machine files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Local configuration
+local.properties
+.env
+.env.*
+!.env.example
+
+# Kotlin plugin data
+.kotlin/

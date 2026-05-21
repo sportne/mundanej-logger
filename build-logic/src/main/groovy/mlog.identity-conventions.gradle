@@ -1,0 +1,11 @@
+plugins {
+    id 'base'
+}
+
+group = rootProject.group
+version = rootProject.version
+
+tasks.withType(AbstractArchiveTask).configureEach {
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
+}

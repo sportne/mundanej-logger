@@ -1,0 +1,13 @@
+plugins {
+    id 'mlog.java-conventions'
+    id 'mlog.quality-conventions'
+    id 'mlog.coverage-conventions'
+}
+
+description = 'Repository-wide architecture tests for mundane logger.'
+
+dependencies {
+    testImplementation project(':modules:api')
+    testImplementation project(':modules:core')
+    testImplementation project(':modules:slf4j')
+}

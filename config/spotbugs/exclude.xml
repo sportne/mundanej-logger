@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+  <Match>
+    <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
+    <Class name="io.github.mundanej.mlog.api.LogEvent"/>
+    <Field name="throwable"/>
+  </Match>
+  <Match>
+    <Bug pattern="EI_EXPOSE_REP"/>
+    <Class name="io.github.mundanej.mlog.slf4j.MundaneSlf4jServiceProvider"/>
+    <Method name="getMDCAdapter"/>
+  </Match>
+</FindBugsFilter>

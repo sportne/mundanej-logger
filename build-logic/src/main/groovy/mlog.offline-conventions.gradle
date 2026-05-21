@@ -1,0 +1,7 @@
+tasks.register('printOfflineBuildInstructions') {
+    group = 'help'
+    description = 'Prints offline build instructions.'
+    doLast {
+        println 'Use -Pmlog.offlineRepo=/path/to/local-maven-repo with --offline to resolve all dependencies locally.'
+    }
+}

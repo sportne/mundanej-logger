@@ -1,0 +1,17 @@
+plugins {
+    id 'mlog.java-conventions'
+    id 'mlog.quality-conventions'
+    id 'mlog.coverage-conventions'
+    id 'mlog.publishing-conventions'
+    id 'mlog.native-conventions'
+}
+
+description = 'Native mundane logger API with no third-party runtime dependencies.'
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId = 'mundane-logger-api'
+        }
+    }
+}
