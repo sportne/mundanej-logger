@@ -1,20 +1,20 @@
+import org.gradle.api.artifacts.VersionCatalogsExtension
+
 plugins {
     id 'org.graalvm.buildtools.native'
 }
 
+def libs = extensions.getByType(VersionCatalogsExtension).named('libs')
+
 def nativeSmokeTestSourceSet = sourceSets.create('nativeSmokeTest') {
     java.srcDir 'src/nativeSmokeTest/java'
     resources.srcDir 'src/nativeSmokeTest/resources'
-    compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
-    runtimeClasspath += output + compileClasspath
 }
 
-configurations.named('nativeSmokeTestImplementation') {
-    extendsFrom configurations.testImplementation
-}
-
-configurations.named('nativeSmokeTestRuntimeOnly') {
-    extendsFrom configurations.testRuntimeOnly
+dependencies {
+    nativeSmokeTestImplementation platform(libs.findLibrary('junit-bom').get())
+    nativeSmokeTestImplementation libs.findLibrary('junit-jupiter').get()
+    nativeSmokeTestRuntimeOnly libs.findLibrary('junit-platform-launcher').get()
 }
 
 def nativeSmokeJvmTest = tasks.register('nativeSmokeJvmTest', Test) {
@@ -23,6 +23,10 @@ def nativeSmokeJvmTest = tasks.register('nativeSmokeJvmTest', Test) {
     testClassesDirs = nativeSmokeTestSourceSet.output.classesDirs
     classpath = nativeSmokeTestSourceSet.runtimeClasspath
     shouldRunAfter tasks.named('test')
+}
+
+tasks.named('check') {
+    dependsOn nativeSmokeJvmTest
 }
 
 graalvmNative {
@@ -48,4 +52,12 @@ graalvmNative {
             buildArgs.add('-H:+ReportExceptionStackTraces')
         }
     }
+}
+
+configurations.named('nativeImageSmokeTestClasspath') {
+    setExtendsFrom([
+        configurations.named('nativeImageSmokeTestCompileOnly').get(),
+        configurations.named('nativeSmokeTestImplementation').get(),
+        configurations.named('nativeSmokeTestRuntimeOnly').get(),
+    ])
 }
