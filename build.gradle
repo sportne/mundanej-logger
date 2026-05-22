@@ -18,13 +18,17 @@ def checkedProjects = [
 ]
 
 def qualityProjects = checkedProjects.findAll { it != ':modules:mundane-logger-bom' }
-def publishedProjects = [
-    ':modules:mundane-logger-bom',
-    ':modules:api',
-    ':modules:core',
-    ':modules:slf4j',
-    ':modules:testkit',
+def publishedArtifacts = [
+    ':modules:mundane-logger-bom': 'mundane-logger-bom',
+    ':modules:api'               : 'mundane-logger-api',
+    ':modules:core'              : 'mundane-logger-core',
+    ':modules:slf4j'             : 'mundane-logger-slf4j',
+    ':modules:testkit'           : 'mundane-logger-testkit',
 ]
+def publishedRuntimeArtifacts = publishedArtifacts.findAll { it.value != 'mundane-logger-bom' }
+def releaseDryRunRepository = layout.buildDirectory.dir('release-dry-run/maven')
+def releaseDryRunVersion = version.toString()
+def releaseDryRunGroupPath = group.toString().replace('.', '/')
 
 tasks.register('checkAll') {
     group = 'verification'
@@ -50,45 +54,129 @@ tasks.register('nativeSmoke') {
     dependsOn ':modules:native-tests:nativeSmokeTest'
 }
 
-def publicationStagingDirectory = layout.buildDirectory.dir('staging-repository')
-def publicationCandidateVersion = version.toString()
-
-tasks.register('stagePublications') {
+tasks.register('cleanReleaseDryRun', Delete) {
     group = 'publishing'
-    description = 'Publishes approved artifacts to the local staging repository.'
-    dependsOn publishedProjects.collect { "${it}:publishAllPublicationsToLocalStagingRepository" }
+    description = 'Deletes the local release dry-run Maven repository.'
+    delete releaseDryRunRepository
 }
 
-tasks.register('validatePublicationStaging') {
+def publishReleaseDryRunTasks =
+    publishedArtifacts.keySet().collect { "${it}:publishAllPublicationsToReleaseDryRunRepository" }
+
+tasks.register('verifyReleaseDryRun') {
     group = 'verification'
-    description = 'Validates the local publication staging repository layout.'
-    dependsOn tasks.named('stagePublications')
-    inputs.dir(publicationStagingDirectory)
+    description = 'Verifies locally staged publication metadata and artifacts.'
+    dependsOn publishReleaseDryRunTasks
+    mustRunAfter tasks.named('cleanReleaseDryRun')
+    inputs.dir(releaseDryRunRepository)
     doLast {
-        def repository = publicationStagingDirectory.get().asFile
+        def repository = releaseDryRunRepository.get().asFile
         if (!repository.isDirectory()) {
-            throw new GradleException("Missing publication staging repository: ${repository}")
+            throw new GradleException("Missing release dry-run repository: ${repository}")
         }
-        def expectedArtifacts = [
-            'mundane-logger-bom',
-            'mundane-logger-api',
-            'mundane-logger-core',
-            'mundane-logger-slf4j',
-            'mundane-logger-testkit',
-        ]
-        expectedArtifacts.each { artifact ->
-            def artifactDirectory = new File(repository, "io/github/mundanej/${artifact}/${publicationCandidateVersion}")
-            if (!artifactDirectory.isDirectory()) {
-                throw new GradleException("Missing staged coordinate directory: ${artifactDirectory}")
+
+        def versionText = releaseDryRunVersion
+        def groupPath = releaseDryRunGroupPath
+        def slurper = new groovy.xml.XmlSlurper(false, false)
+        def findArtifactFile = { File artifactDirectory, String artifactId, String suffix ->
+            (artifactDirectory.listFiles()?.findAll { it.isFile() } ?: []).find {
+                it.name.startsWith("${artifactId}-") && it.name.endsWith(suffix)
             }
         }
+        def findMainJar = { File artifactDirectory, String artifactId ->
+            (artifactDirectory.listFiles()?.findAll { it.isFile() } ?: []).find {
+                it.name.startsWith("${artifactId}-")
+                    && it.name.endsWith('.jar')
+                    && !it.name.endsWith('-sources.jar')
+                    && !it.name.endsWith('-javadoc.jar')
+            }
+        }
+
+        publishedArtifacts.each { projectPath, artifactId ->
+            def artifactDirectory = new File(repository, "${groupPath}/${artifactId}/${versionText}")
+            if (!artifactDirectory.isDirectory()) {
+                throw new GradleException("Missing release dry-run directory for ${projectPath}: ${artifactDirectory}")
+            }
+
+            def pomFile = findArtifactFile(artifactDirectory, artifactId, '.pom')
+            if (pomFile == null) {
+                throw new GradleException("Missing POM for ${projectPath}")
+            }
+            if (findArtifactFile(artifactDirectory, artifactId, '.module') == null) {
+                throw new GradleException("Missing Gradle module metadata for ${projectPath}")
+            }
+
+            def pom = slurper.parse(pomFile)
+            if (pom.name.text().isBlank()) {
+                throw new GradleException("Missing POM name for ${artifactId}")
+            }
+            if (pom.description.text().isBlank()) {
+                throw new GradleException("Missing POM description for ${artifactId}")
+            }
+            if (pom.url.text() != 'https://github.com/sportne/mundane-logger') {
+                throw new GradleException("Unexpected POM URL for ${artifactId}: ${pom.url.text()}")
+            }
+            if (pom.licenses.license.name.text() != 'BSD 3-Clause License') {
+                throw new GradleException("Missing BSD 3-Clause license metadata for ${artifactId}")
+            }
+            if (pom.developers.developer.id.text() != 'sportne') {
+                throw new GradleException("Missing developer metadata for ${artifactId}")
+            }
+            if (pom.scm.url.text() != 'https://github.com/sportne/mundane-logger') {
+                throw new GradleException("Missing SCM metadata for ${artifactId}")
+            }
+
+            if (artifactId != 'mundane-logger-bom') {
+                if (findMainJar(artifactDirectory, artifactId) == null) {
+                    throw new GradleException("Missing main JAR artifact for ${artifactId}")
+                }
+                ['-sources.jar', '-javadoc.jar'].each { suffix ->
+                    if (findArtifactFile(artifactDirectory, artifactId, suffix) == null) {
+                        throw new GradleException("Missing ${suffix} artifact for ${artifactId}")
+                    }
+                }
+            }
+        }
+
+        def bomDirectory = new File(repository, "${groupPath}/mundane-logger-bom/${versionText}")
+        def bomPomFile = findArtifactFile(bomDirectory, 'mundane-logger-bom', '.pom')
+        def bomPom = slurper.parse(bomPomFile)
+        def bomArtifactIds = bomPom.dependencyManagement.dependencies.dependency.artifactId*.text() as Set
+        def missingBomArtifacts = publishedRuntimeArtifacts.values().findAll { !bomArtifactIds.contains(it) }
+        if (!missingBomArtifacts.isEmpty()) {
+            throw new GradleException("BOM is missing published module constraints: ${missingBomArtifacts.join(', ')}")
+        }
+
+        println "Verified release dry-run repository at ${repository}"
     }
+}
+
+gradle.projectsEvaluated {
+    publishedArtifacts.keySet().each { projectPath ->
+        project(projectPath).tasks.matching {
+            it.name.startsWith('publish') && it.name.endsWith('PublicationToReleaseDryRunRepository')
+        }.configureEach {
+            dependsOn rootProject.tasks.named('cleanReleaseDryRun')
+        }
+        project(projectPath).tasks.matching {
+            it.name == 'publishAllPublicationsToReleaseDryRunRepository'
+        }.configureEach {
+            mustRunAfter rootProject.tasks.named('cleanReleaseDryRun')
+        }
+    }
+}
+
+tasks.register('releaseDryRun') {
+    group = 'publishing'
+    description = 'Publishes public artifacts to build/release-dry-run/maven and verifies release metadata.'
+    dependsOn tasks.named('cleanReleaseDryRun')
+    dependsOn tasks.named('verifyReleaseDryRun')
 }
 
 tasks.register('publicationDryRun') {
     group = 'publishing'
     description = 'Stages approved Maven artifacts locally and validates release metadata without publishing remotely.'
-    dependsOn tasks.named('validatePublicationStaging')
+    dependsOn tasks.named('releaseDryRun')
 }
 
 tasks.register('printPublishedArtifacts') {

@@ -3,27 +3,41 @@ plugins {
     id 'maven-publish'
 }
 
+def releaseDryRunRepository = rootProject.layout.buildDirectory.dir('release-dry-run/maven')
+
 publishing {
     publications {
         mavenJava(MavenPublication) {
             from components.java
             pom {
-                name = project.name
-                description = project.description ?: project.name
-                url = 'https://github.com/mundanej/mundane-logger'
+                name = provider { artifactId ?: project.name }
+                description = provider { project.description ?: project.name }
+                url = 'https://github.com/sportne/mundane-logger'
                 licenses {
                     license {
-                        name = 'The Apache License, Version 2.0'
-                        url = 'https://www.apache.org/licenses/LICENSE-2.0.txt'
+                        name = 'BSD 3-Clause License'
+                        url = 'https://opensource.org/license/bsd-3-clause/'
+                        distribution = 'repo'
                     }
+                }
+                developers {
+                    developer {
+                        id = 'sportne'
+                        name = 'sportne'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:https://github.com/sportne/mundane-logger.git'
+                    developerConnection = 'scm:git:ssh://git@github.com/sportne/mundane-logger.git'
+                    url = 'https://github.com/sportne/mundane-logger'
                 }
             }
         }
     }
     repositories {
         maven {
-            name = 'localStaging'
-            url = rootProject.layout.buildDirectory.dir('staging-repository')
+            name = 'releaseDryRun'
+            url = releaseDryRunRepository
         }
     }
 }
