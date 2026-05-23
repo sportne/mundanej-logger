@@ -1,0 +1,12 @@
+plugins {
+    id 'mlog.java-conventions'
+    id 'mlog.quality-conventions'
+    id 'mlog.coverage-conventions'
+}
+
+description = 'Consumer quickstart for the mundane logger native API.'
+
+dependencies {
+    implementation project(':modules:core')
+    testImplementation project(':modules:testkit')
+}

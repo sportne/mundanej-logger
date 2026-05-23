@@ -15,6 +15,8 @@ def checkedProjects = [
     ':modules:testkit',
     ':modules:architecture-tests',
     ':modules:native-tests',
+    ':examples:native-api-quickstart',
+    ':examples:slf4j-provider-quickstart',
 ]
 
 def qualityProjects = checkedProjects.findAll { it != ':modules:mundane-logger-bom' }

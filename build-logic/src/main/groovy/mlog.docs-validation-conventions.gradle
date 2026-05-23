@@ -9,6 +9,7 @@ tasks.register('validateDesignControlPack') {
         rootProject.file('docs/architecture/module-boundaries.md'),
         rootProject.file('docs/architecture/output-formats.md'),
         rootProject.file('docs/verification/architecture-gates.md'),
+        rootProject.file('docs/verification/consumer-quickstarts.md'),
         rootProject.file('docs/verification/native-image.md'),
         rootProject.file('docs/verification/release.md'),
         rootProject.file('docs/roadmap.md')

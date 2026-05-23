@@ -29,8 +29,7 @@ Gradle consumers can align artifacts with the BOM:
 ```groovy
 dependencies {
   implementation platform('io.github.mundanej:mundane-logger-bom:0.1.0-SNAPSHOT')
-  implementation 'io.github.mundanej:mundane-logger-api'
-  runtimeOnly 'io.github.mundanej:mundane-logger-core'
+  implementation 'io.github.mundanej:mundane-logger-core'
 }
 ```
 
@@ -72,6 +71,9 @@ Configuration details are documented in
 
 Output format details are documented in
 [`docs/architecture/output-formats.md`](docs/architecture/output-formats.md).
+
+Consumer quickstart verification is documented in
+[`docs/verification/consumer-quickstarts.md`](docs/verification/consumer-quickstarts.md).
 
 Native Image verification is documented in
 [`docs/verification/native-image.md`](docs/verification/native-image.md).
