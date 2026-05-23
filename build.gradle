@@ -115,7 +115,7 @@ tasks.register('verifyReleaseDryRun') {
             if (pom.description.text().isBlank()) {
                 throw new GradleException("Missing POM description for ${artifactId}")
             }
-            if (pom.url.text() != 'https://github.com/sportne/mundane-logger') {
+            if (pom.url.text() != 'https://github.com/sportne/mundanej-logger') {
                 throw new GradleException("Unexpected POM URL for ${artifactId}: ${pom.url.text()}")
             }
             if (pom.licenses.license.name.text() != 'BSD 3-Clause License') {
@@ -124,7 +124,7 @@ tasks.register('verifyReleaseDryRun') {
             if (pom.developers.developer.id.text() != 'sportne') {
                 throw new GradleException("Missing developer metadata for ${artifactId}")
             }
-            if (pom.scm.url.text() != 'https://github.com/sportne/mundane-logger') {
+            if (pom.scm.url.text() != 'https://github.com/sportne/mundanej-logger') {
                 throw new GradleException("Missing SCM metadata for ${artifactId}")
             }
 

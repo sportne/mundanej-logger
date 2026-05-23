@@ -17,7 +17,7 @@ publishing {
             pom {
                 name = provider { artifactId ?: project.name }
                 description = provider { project.description ?: project.name }
-                url = 'https://github.com/sportne/mundane-logger'
+                url = 'https://github.com/sportne/mundanej-logger'
                 licenses {
                     license {
                         name = 'BSD 3-Clause License'
@@ -32,9 +32,9 @@ publishing {
                     }
                 }
                 scm {
-                    connection = 'scm:git:https://github.com/sportne/mundane-logger.git'
-                    developerConnection = 'scm:git:ssh://git@github.com/sportne/mundane-logger.git'
-                    url = 'https://github.com/sportne/mundane-logger'
+                    connection = 'scm:git:https://github.com/sportne/mundanej-logger.git'
+                    developerConnection = 'scm:git:ssh://git@github.com/sportne/mundanej-logger.git'
+                    url = 'https://github.com/sportne/mundanej-logger'
                 }
             }
         }

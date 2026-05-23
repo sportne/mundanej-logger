@@ -50,6 +50,9 @@ BSD 3-Clause license metadata, developer metadata, and SCM metadata. It also
 checks that Java artifacts include binary, sources, and Javadoc jars, and that
 the BOM aligns every public non-BOM module.
 
+Published POM URL and SCM metadata must match the configured GitHub repository:
+`https://github.com/sportne/mundanej-logger`.
+
 ## Version Override
 
 The default local version is `0.1.0-SNAPSHOT`. To test another version without
