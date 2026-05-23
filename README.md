@@ -75,6 +75,9 @@ Output format details are documented in
 Consumer quickstart verification is documented in
 [`docs/verification/consumer-quickstarts.md`](docs/verification/consumer-quickstarts.md).
 
+CI verification is documented in
+[`docs/verification/ci.md`](docs/verification/ci.md).
+
 Native Image verification is documented in
 [`docs/verification/native-image.md`](docs/verification/native-image.md).
 
