@@ -1,0 +1,48 @@
+name: github-release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: GitHub release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Resolve release version
+        id: version
+        shell: bash
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          if [[ -z "$version" || "$version" == "$GITHUB_REF_NAME" ]]; then
+            echo "Tag must start with v, got: $GITHUB_REF_NAME" >&2
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - name: Verify and stage release artifacts
+        run: ./gradlew check releaseDryRun printPublishedArtifacts -Pmlog.version=${{ steps.version.outputs.version }} --console=plain
+      - name: Package release artifacts
+        shell: bash
+        run: |
+          mkdir -p build/github-release
+          (cd build/release-dry-run && zip -qr "../github-release/mundane-logger-${{ steps.version.outputs.version }}-maven.zip" maven)
+          tar -C build/release-dry-run -czf "build/github-release/mundane-logger-${{ steps.version.outputs.version }}-maven.tar.gz" maven
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            build/github-release/mundane-logger-${{ steps.version.outputs.version }}-maven.zip \
+            build/github-release/mundane-logger-${{ steps.version.outputs.version }}-maven.tar.gz \
+            --title "mundane-logger ${{ steps.version.outputs.version }}" \
+            --notes "Maven-layout artifacts for mundane-logger ${{ steps.version.outputs.version }}."

@@ -28,7 +28,7 @@ Gradle consumers can align artifacts with the BOM:
 
 ```groovy
 dependencies {
-  implementation platform('io.github.mundanej:mundane-logger-bom:0.1.0-SNAPSHOT')
+  implementation platform('io.github.mundanej:mundane-logger-bom:1.0.0')
   implementation 'io.github.mundanej:mundane-logger-core'
 }
 ```
@@ -49,14 +49,14 @@ LOG.info()
 
 ```groovy
 dependencies {
-  implementation platform('io.github.mundanej:mundane-logger-bom:0.1.0-SNAPSHOT')
+  implementation platform('io.github.mundanej:mundane-logger-bom:1.0.0')
   implementation 'io.github.mundanej:mundane-logger-slf4j'
 }
 ```
 
 ## Artifacts
 
-The planned v0.1 Maven coordinates are:
+The 1.0.0 Maven-layout GitHub release artifacts are:
 
 | Artifact | Coordinate |
 |---|---|

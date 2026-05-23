@@ -1,12 +1,12 @@
 # Output Formats
 
-`mundane-logger` v0.1 supports two output formats: JSON Lines for structured
+`mundane-logger` 1.0.0 supports two output formats: JSON Lines for structured
 production logging and plain text for simple human-readable logs. Both formats
 render one log event as one physical line followed by `\n`.
 
 The runtime does not support format plugins, pattern languages, expression
 evaluation, message lookups, schema negotiation, arrays, or nested structured
-objects in v0.1.
+objects in 1.0.0.
 
 ## JSON Lines
 

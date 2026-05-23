@@ -1,12 +1,13 @@
 # Roadmap
 
-## v0.1
+## 1.0.0
 
 - Repository scaffold and governance documents.
 - Native API, core runtime, JSON Lines and text renderers.
 - stdout, stderr, and file sinks.
 - SLF4J 2.x provider.
-- Architecture gates and Native Image smoke scaffolding.
+- Architecture gates, consumer quickstarts, CI, release dry-run validation, and
+  Native Image smoke coverage.
 
 ## Later
 
