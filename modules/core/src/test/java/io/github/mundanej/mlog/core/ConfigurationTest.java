@@ -55,7 +55,7 @@ final class ConfigurationTest {
             "mundane.logger.rootLevel=warn",
             "mundane.logger.format=text",
             "mundane.logger.sink=file",
-            "mundane.logger.file.path=" + logFile,
+            "mundane.logger.file.path=" + logFile.toString().replace("\\", "\\\\"),
             "mundane.logger.file.mode=truncate",
             "mundane.logger.includeThread=false",
             "mundane.logger.throwable=stacktrace",
