@@ -89,6 +89,7 @@ final class ThrowableRenderer {
   private static String stackTrace(Throwable throwable) {
     StringWriter stringWriter = new StringWriter();
     throwable.printStackTrace(new PrintWriter(stringWriter));
-    return stringWriter.toString();
+    // Keep stack-trace output deterministic across Windows and Unix hosts.
+    return stringWriter.toString().replace("\r\n", "\n");
   }
 }
